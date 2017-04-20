@@ -2,8 +2,7 @@
 " Copyright (C) 2017 Ahmed Masud <ahmed.masud@trustifier.com>
 " Released under the same license as other vim syntax files
 " 
-
-
+"
 if version < 600
 	syntax clear
 else
@@ -14,7 +13,42 @@ syntax include @lyxTeX 	syntax/tex.vim
 unlet b:current_syntax
 syntax include @lyxHTML syntax/xhtml.vim
 
-syntax case ignore
+syntax region 	lyxComment 	start=+#+ end=+\v$+ 	contained 
+syntax match	lyxBlankLines 	/\v^\s*$/ 		contained containedin=ALL
+
+syntax region 	lyxPreFormatLine start=/\%^/ end=/\v\c\zsformat/me=e-6 contains=lyxModuleHeader,lyxComment
+syntax region 	lyxComment start=/\v#/ end=/\v$/ contained 
+	\ contains=lyxHeaderDecl,lyxBadHeader,lyxHeaderKeywords,lyxHeaderNeededMessage
+	\ containedin=lyxPreFormatLine
+
+" syntax region 	lyxBadHeader start=/\v%^\zs#\s*%(\\Declare(LyXModule|Category|DocBookClass))|%(\cLyXInclude)/ end='\v$'
+"	\ contained contains=lyxHeaderNeededMessage containedin=lyxPreFormatLine
+
+" TODO: test what happens if there are two lines that begin with #% ? 
+syntax match 	lyxHeaderNeededMessage /\m^#%.*$/  contained
+syntax region   lyxHeaderDecl start=/\v\zs%(\\Declare|\cLyXInclude)/ end=/\v$/ contained contains=lyxHeaderKeywords
+
+highlight link lyxPreFormatLine 	Error
+highlight link lyxBlankLines 		Normal
+highlight link lyxComment 		Comment
+highlight link lyxBadHeader 		Error
+highlight lyxHeaderNeededMessage	term=bold ctermfg=yellow
+
+highlight lyxHeaderDecl  term=bold ctermfg=white 
+
+syntax keyword lyxHeaderKeywords contained containedin=lyxHeaderDecl
+	\ DeclareDocBookClass
+	\ DeclareLyXModule 
+	\ DeclareCategory
+	\ LyXInclude
+
+highlight lyxHeaderKeywords term=bold ctermfg=magenta
+
+
+
+finish
+
+" everything below is not good
 
 syntax region lyxComment start=+#+ end=+$+ contains=lyxHeader contained containedin=ALLBUT,lyxPreamble,lyxHTMLPreamble,lyxHeader.*
 
@@ -22,12 +56,7 @@ syntax keyword lyxKeywords
 	\ End
 	\ Input
 	\ InsetLayout 
-
-syntax keyword lyxHeaderKeywords contained 
-	\ LyXModuleInclude
-	\ DeclareLyXModule 
-	\ EndLyXDeclaration 
-	\ EndDeclaration
+	\ Style
 
 syntax keyword lyxHeaderDescriptionKW contained containedin=lyxComment
 	\ DescriptionBegin
@@ -42,9 +71,9 @@ syntax keyword lyxPreambleKeywords contained
 	\ EndPreamble
 
 syntax region lyxHeader
-	\ start=/^#\s*\(\(\\DeclareLyXModule\)\|\(LyXModuleInclude\)\)/
-	\ end=/^\s*$\|^\s[^#]*$\|^#End\(LyX\)?Declaration/
-	\ contains=lyxHeaderDescription,lyxHeaderKeywords
+	\ start=/\v\%^/ 
+	\ end=/\v\c\_.\{-}\zsFORMAT/
+	\ contains=lyxHeader,lyxHeaderDescription
 
 syntax region lyxHeaderDescription contained containedin=lyxHeader
 	\ matchgroup=lyxHeaderDescriptionKW
@@ -56,7 +85,11 @@ syntax region lyxHeaderDescriptionLine contained containedin=lyxHeaderDescriptio
 	\ start=+^#+ end=+$+ 
 
 
-syntax match lyxHeaderParamLine /\v:.*/ contained containedin=lyxHeader
+syntax match lyxHeaderParamLine /\v\s*#.*:.*/ contained containedin=lyxHeader
+
+syntax region lyxNoFormatError start=/\%^/ end=/\v\c\zsformat/me=e-6 
+highlight link lyxNoFormatError Error 
+
 
 syntax match lyxHeaderParamOpers /\v:/ contained containedin=lyxHeader
 syntax keyword lyxHeaderParamsKW Requires Excludes Category Author contained containedin=lyxHeader
@@ -66,16 +99,16 @@ syntax match 	lyxFormatError /\v[^[:space:][:digit:]]/ contained containedin=lyx
 syntax keyword 	lyxFormatKW format contained containedin=lyxFormatLine
 syntax match 	lyxFormatNumber /\d\{1,2\}/ contained containedin=lyxFormatLine
 syntax region 	lyxFormatLine 
-	\ start=/\vformat/ end=/\v$/
+	\ start=/\v\c\zsformat/ end=/\v$/
 	\ contains=lyxFormatKW,lyxFormatNumber,lyxFormatError keepend oneline
 
-syntax region lyxPreamble 
+syntax region lyxPreamble keepend
 	\ matchgroup=lyxPreambleKeywords
 	\ start=/\%(AddTo\)\?Preamble/
 	\ end=/EndPreamble/
 	\ contains=@lyxTeX,lyxPreambleKeywords 
 
-syntax region lyxHTMLPreamble
+syntax region lyxHTMLPreamble keepend
 	\ matchgroup=lyxPreambleKeywords
 	\ start=/\%(AddTo\)\?HTMLPreamble/
 	\ end=/EndPreamble/

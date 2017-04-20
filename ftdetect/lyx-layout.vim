@@ -9,7 +9,7 @@ func! s:FTLyXModule()
 		let line = getline(n)
 		let is_lyxlayout = line =~ '\\DeclareLaTeXClass'
 		let is_lyxmodule = line =~ '\\DeclareLyXModule'
-		let is_lyxinclude = line =~ 'LyXModuleInclude'
+		let is_lyxinclude = line =~ 'LyXInclude'
 		if is_lyxlayout || is_lyxmodule || is_lyxinclude
 			setlocal filetype=lyx-layout
 			return 
